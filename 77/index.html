@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Логістика - Reactive Shipment Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script src="assets/vendor/rxjs.umd.min.js"></script>
+    <script type="module" src="main11.js"></script>
+   
+
+</head>
+<body>
+    <header class="hero">
+        <div class="container">
+            <p class="hero__label"></p>
+            <h1>Логістика</h1>
+            <p>Reactive Shipment Tracking</p>
+        </div>
+    </header>
+
+    <main>
+        <section class="section">
+            <div class="container">
+                
+                <div class="panel panel--controls">
+                    <form id="shipmentForm" class="form" novalidate>
+                        <label class="field" for="trackingInput">Трек-номер</label>
+                        <div class="row">
+                            <input id="trackingInput" type="text" maxlength="50" placeholder="Наприклад: LV123456789UA" autocomplete="off">
+                        </div>
+                        <label class="field" for="destinationInput">Пункт призначення</label>
+                        <div class="row">
+                            <input id="destinationInput" type="text" maxlength="200" placeholder="Наприклад: Київ, Хрещатик 22" autocomplete="off">
+                        </div>
+                        <div class="row">
+                            <button class="btn" type="submit">Додати відправлення</button>
+                        </div>
+                    </form>
+                    <div class="filter-group" id="filterButtons" aria-label="Фільтри відправлень">
+                        <button class="btn btn--ghost is-active" type="button" data-filter="all"> Усі</button>
+                        <button class="btn btn--ghost" type="button" data-filter="pending"> Очікує</button>
+                        <button class="btn btn--ghost" type="button" data-filter="in-transit"> В дорозі</button>
+                        <button class="btn btn--ghost" type="button" data-filter="delivered"> Доставлено</button>
+                    </div>
+                    <div class="stats" id="statsInfo"></div>
+                </div>
+                <div class="panel">
+                    <h2>Список відправлень</h2>
+                    <ul id="shipmentList" class="shipment-list" aria-live="polite"></ul>
+                </div>
+            </div>
+        </section>
+    </main>
+    <footer>
+        <div class="container">
+        <p>&copy; 2026 Поліна Прокопенко. Усі права захищені</p>
+        </div>
+    </footer>
+</body>
+</html>
