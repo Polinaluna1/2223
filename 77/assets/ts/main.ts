@@ -1,4 +1,4 @@
-import type { Shipment, ShipmentFilter } from "./types.js";
+import type { Shipment, ShipmentFilter, ShipmentStats } from "./types.js";
 
 declare const rxjs: typeof import("rxjs");
 
@@ -75,13 +75,11 @@ function bindAddShipment(): void {
       shipments$.next([shipment, ...current]);
       trackingInput.value = "";
       destinationInput.value = "";
-      showNotification(`✅ Відправлення ${shipment.trackingNumber} додано!`, "success");
+      showNotification(` Відправлення ${shipment.trackingNumber} додано!`, "success");
       
-
       trackingInput.focus();
     });
 }
-
 
 function bindInputValidation(): void {
   if (!trackingInput || !destinationInput) return;
@@ -96,7 +94,6 @@ function bindInputValidation(): void {
       trackingInput.classList.toggle("invalid", !isValid && value.length > 0);
     });
 }
-
 
 function bindStatusScrollSelection(): void {
   if (!shipmentList) return;
@@ -122,11 +119,9 @@ function bindStatusScrollSelection(): void {
         let newStatus: Shipment["status"] | null = null;
         
         if (event.deltaY > 0) {
-        
           if (shipment.status === "pending") newStatus = "in-transit";
           else if (shipment.status === "in-transit") newStatus = "delivered";
         } else if (event.deltaY < 0) {
-         
           if (shipment.status === "delivered") newStatus = "in-transit";
           else if (shipment.status === "in-transit") newStatus = "pending";
         }
@@ -148,7 +143,7 @@ function bindStatusScrollSelection(): void {
         setTimeout(() => card.classList.remove("status-changed"), 300);
       }
       
-      showNotification(` Статус змінено прокруткою`, "success");
+      showNotification(`Статус змінено прокруткою`, "success");
     });
 }
 
@@ -159,14 +154,13 @@ function bindClearAll(): void {
     .subscribe(() => {
       if (shipments$.getValue().length === 0) return;
       
-      const confirmed = confirm(" Ви дійсно хочете видалити ВСІ відправлення?");
+      const confirmed = confirm("Ви дійсно хочете видалити ВСІ відправлення?");
       if (confirmed) {
         shipments$.next([]);
-        showNotification(" Всі відправлення видалено", "info");
+        showNotification("Всі відправлення видалено", "info");
       }
     });
 }
-
 
 function bindFilters(): void {
   if (!filterButtons) return;
@@ -187,7 +181,7 @@ function bindFilters(): void {
       
       filter$.next(filter);
       updateActiveFilterButton(filter);
-      showNotification(` Фільтр: ${getFilterName(filter)}`, "info");
+      showNotification(`Фільтр: ${getFilterName(filter)}`, "info");
     });
 }
 
@@ -200,7 +194,6 @@ function getFilterName(filter: ShipmentFilter): string {
   };
   return names[filter];
 }
-
 
 function bindListActions(): void {
   if (!shipmentList) return;
@@ -237,7 +230,7 @@ function bindListActions(): void {
         const next = current.filter((s) => s.id !== payload.id);
         shipments$.next(next);
         if (deletedItem) {
-          showNotification(` Видалено: ${deletedItem.trackingNumber}`, "warning");
+          showNotification(`Видалено: ${deletedItem.trackingNumber}`, "warning");
         }
       }
 
@@ -250,11 +243,10 @@ function bindListActions(): void {
         shipments$.next(next);
         
         const statusName = payload.status === "in-transit" ? "В дорозі" : "Доставлено";
-        showNotification(` Статус змінено на "${statusName}"`, "success");
+        showNotification(`Статус змінено на "${statusName}"`, "success");
       }
     });
 }
-
 
 function bindRendering(): void {
   if (!shipmentList || !statsInfo) return;
@@ -271,33 +263,26 @@ function bindRendering(): void {
   );
 
   visibleShipments$.subscribe(({ shipments, visible, filter }) => {
-    renderShipmentList(visible);
+    renderShipmentList(visible, filter);//робота над помилками
     renderStats(shipments);
-    updateEmptyStateMessage(filter);
   });
 }
-
-function updateEmptyStateMessage(filter: ShipmentFilter): void {
-  const emptyEl = document.querySelector(".empty-state");
-  if (!emptyEl && shipmentList?.children.length === 0) {
-    const filterNames = {
-      "all": "жодних",
-      "pending": "очікуваних",
-      "in-transit": "в дорозі",
-      "delivered": "доставлених"
-    };
-    
-  }
-}
-
-function renderShipmentList(items: Shipment[]): void {
+//Робота над помилками
+function renderShipmentList(items: Shipment[], filter: ShipmentFilter): void {
   if (!shipmentList) return;
 
   if (items.length === 0) {
+    const filterMessages = {
+      "all": "Відправлень не знайдено",
+      "pending": "Немає відправлень у статусі 'Очікує'",
+      "in-transit": "Немає відправлень у статусі 'В дорозі'",
+      "delivered": "Немає відправлень у статусі 'Доставлено'"
+    };
+    
     shipmentList.innerHTML = `
       <li class="empty-state">
         <div class="empty-icon">📭</div>
-        <div class="empty-text">Відправлень не знайдено</div>
+        <div class="empty-text">${filterMessages[filter]}</div>
         <div class="empty-hint">Додайте нове відправлення через форму вище</div>
       </li>
     `;
@@ -307,9 +292,9 @@ function renderShipmentList(items: Shipment[]): void {
   shipmentList.innerHTML = items
     .map((s, index) => {
       const statusMap = {
-        "pending": { text: " Очікує", class: "status-pending", icon: "" },
-        "in-transit": { text: " В дорозі", class: "status-transit", icon: "" },
-        "delivered": { text: " Доставлено", class: "status-delivered", icon: "" }
+        "pending": { text: "Очікує", class: "status-pending", icon: "" },
+        "in-transit": { text: "В дорозі", class: "status-transit", icon: "" },
+        "delivered": { text: "Доставлено", class: "status-delivered", icon: "" }
       };
       const status = statusMap[s.status];
       const date = new Date(s.createdAt);
@@ -347,7 +332,7 @@ function renderShipmentList(items: Shipment[]): void {
               </button>` 
               : ""}
             <button class="btn-delete" data-action="delete" data-id="${s.id}">
-              <span></span> Видалити
+              <span> </span> Видалити
             </button>
           </div>
         </li>
@@ -355,39 +340,44 @@ function renderShipmentList(items: Shipment[]): void {
     })
     .join("");
 }
+//робота над помилками , додала функцію calculateStats(),  повертає об'єкт типу ShipmentStats
+function calculateStats(shipments: Shipment[]): ShipmentStats {
+  return {
+    total: shipments.length,
+    pending: shipments.filter((s) => s.status === "pending").length,
+    inTransit: shipments.filter((s) => s.status === "in-transit").length,
+    delivered: shipments.filter((s) => s.status === "delivered").length
+  };
+}
 
 function renderStats(shipments: Shipment[]): void {
   if (!statsInfo) return;
   
-  const total = shipments.length;
-  const pending = shipments.filter((s) => s.status === "pending").length;
-  const inTransit = shipments.filter((s) => s.status === "in-transit").length;
-  const delivered = shipments.filter((s) => s.status === "delivered").length;
+  const stats = calculateStats(shipments);
   
   statsInfo.innerHTML = `
     <div class="stat-item" data-stat="total">
       <span class="stat-icon"></span>
       <span class="stat-label">Усього</span>
-      <span class="stat-value">${total}</span>
+      <span class="stat-value">${stats.total}</span>
     </div>
     <div class="stat-item" data-stat="pending">
       <span class="stat-icon"></span>
       <span class="stat-label">Очікує</span>
-      <span class="stat-value">${pending}</span>
+      <span class="stat-value">${stats.pending}</span>
     </div>
     <div class="stat-item" data-stat="transit">
       <span class="stat-icon"></span>
       <span class="stat-label">В дорозі</span>
-      <span class="stat-value">${inTransit}</span>
+      <span class="stat-value">${stats.inTransit}</span>
     </div>
     <div class="stat-item" data-stat="delivered">
       <span class="stat-icon"></span>
       <span class="stat-label">Доставлено</span>
-      <span class="stat-value">${delivered}</span>
+      <span class="stat-value">${stats.delivered}</span>
     </div>
   `;
 }
-
 
 let notificationTimeout: number | null = null;
 
@@ -428,7 +418,6 @@ function updateActiveFilterButton(activeFilter: ShipmentFilter): void {
     button.classList.toggle("is-active", isActive);
   });
 }
-
 
 function bindPersistence(): void {
   shipments$.subscribe((shipments) => {
