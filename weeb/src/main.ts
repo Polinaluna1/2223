@@ -1,4 +1,7 @@
 
+import { getCurrencyRates } from './api.js';
+import { CurrencyApiResponse } from './types.js';
+
 document.addEventListener("DOMContentLoaded", () => {
     initApp();
 });
@@ -9,7 +12,6 @@ function initApp(): void {
         searchQuery: "",
         theme: localStorage.getItem("theme") === "css/style.css" ? "dark" : "light"
     };
-    
 
    
     const nameInput = document.querySelector("#nameInput") as HTMLInputElement | null;
@@ -84,56 +86,47 @@ function initApp(): void {
         });
     }
 
+    // РОбота над помилками,  використову getCurrencyRates з api.ts
     async function loadCurrencyRates(): Promise<void> {
-        console.log("🔄 Завантаження курсів валют...");
+        console.log(" Завантаження курсів валют...");
         
         if (!currencySelect) {
-            console.log("⚠️ currencySelect не знайдено");
+            console.log(" currencySelect не знайдено");
             return;
         }
         
         if (!result) {
-            console.log("⚠️ result не знайдено");
+            console.log(" result не знайдено");
             return;
         }
 
         const baseCurrency = currencySelect.value;
-        console.log(`📊 Базова валюта: ${baseCurrency}`);
+        console.log(` Базова валюта: ${baseCurrency}`);
 
         try {
             result.innerHTML = '<div class="loading">⏳ Завантаження курсів валют...</div>';
             
-            const response = await fetch(`https://open.er-api.com/v6/latest/${baseCurrency}`);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP помилка: ${response.status}`);
-            }
-
-            const data = await response.json();
-            console.log("✅ Дані отримано");
-
-            if (data.result !== "success") {
-                throw new Error("API повернуло помилку");
-            }
+           
+            const data = await getCurrencyRates(baseCurrency);
+            console.log(" Дані отримано через getCurrencyRates");
 
             renderCurrencyTable(data);
-            console.log("✅ Таблицю відображено");
 
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "Невідома помилка";
             console.error(" Помилка:", errorMessage);
             result.innerHTML = `<p style="color:red"> Помилка: ${errorMessage}</p>`;
         }
-    }
+    }// РОбота над помилками
 
-    function renderCurrencyTable(data: any): void {
+    function renderCurrencyTable(data: CurrencyApiResponse): void {
         if (!result) return;
 
         let html = `
             <div class="info">
-                <p> Базова валюта: <strong>${escapeHtml(data.base_code)}</strong></p>
-                <p> Оновлено: ${escapeHtml(data.time_last_update_utc)}</p>
-                <p> Кількість валют: ${Object.keys(data.rates).length}</p>
+                <p>💰 Базова валюта: <strong>${escapeHtml(data.base_code)}</strong></p>
+                <p>🕒 Оновлено: ${escapeHtml(data.time_last_update_utc)}</p>
+                <p>📊 Кількість валют: ${Object.keys(data.rates).length}</p>
             </div>
             <table class="currency-table">
                 <thead>
@@ -150,12 +143,12 @@ function initApp(): void {
                 <tr data-currency="${currency}">
                     <td><strong>${escapeHtml(currency)}</strong></td>
                     <td>${typeof rate === 'number' ? rate.toFixed(4) : rate}</td>
-                   </tr>
+                </tr>
             `;
         }
 
         html += `</tbody>
-         </table>`;
+          </table>`;
 
         result.innerHTML = html;
     }
@@ -174,7 +167,7 @@ function initApp(): void {
     }
 
     function showGreeting(): void {
-        console.log(" Кнопку привітання натиснуто!");
+        console.log("👋 Кнопку привітання натиснуто!");
         
         if (!greeting) return;
         
@@ -183,11 +176,11 @@ function initApp(): void {
         if (val) {
             greeting.innerHTML = `Привіт, <strong>${escapeHtml(val)}</strong>! 🎉 Рада тебе бачити!`;
             greeting.className = "greeting-success";
-            console.log(` Привітання показано для: ${val}`);
+            console.log(`✨ Привітання показано для: ${val}`);
         } else {
             greeting.innerHTML = `Привіт! Будь ласка, введи своє ім'я у поле вище!`;
             greeting.className = "greeting-warning";
-            console.log(" Ім'я не введено");
+            console.log("⚠️ Ім'я не введено");
         }
     }
 
@@ -212,7 +205,7 @@ function initApp(): void {
         btn?.addEventListener("click", showGreeting);
 
         currencyBtn?.addEventListener("click", () => {
-            console.log(" Кнопку 'Отримати курс' натиснуто!");
+            console.log("💰 Кнопку 'Отримати курс' натиснуто!");
             loadCurrencyRates();
         });
 
@@ -264,8 +257,8 @@ function initApp(): void {
             });
         }
     }
+    
     loadSettings();
     bindEvents();
     renderProjects();
-  
- }
+}
