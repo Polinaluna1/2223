@@ -9,6 +9,7 @@ function initApp(): void {
         searchQuery: "",
         theme: localStorage.getItem("theme") === "css/style.css" ? "dark" : "light"
     };
+    
 
    
     const nameInput = document.querySelector("#nameInput") as HTMLInputElement | null;
